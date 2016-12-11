@@ -1,0 +1,2 @@
+defmodule Checkers do
+end
