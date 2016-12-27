@@ -14,15 +14,17 @@ defmodule Square do
 
   def render(square) do
     if(square.populated == :no) do
-      "0"
+      IO.write(ansi_color(square.affiliation) <> "0")
+    else
+      IO.write(ansi_color(square.affiliation) <> rank_character(square.rank))
     end
-    ansi_color(square.affiliation) <> rank_character(square.rank)
   end
   
   def ansi_color(affiliation) do
     case affiliation do
       :friendly -> IO.ANSI.blue
       :enemy -> IO.ANSI.red
+      _ -> IO.ANSI.white
     end
   end
   
