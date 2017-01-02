@@ -9,29 +9,25 @@ defmodule Square do
   #rank: :pawn, :king, :empty
 
   @doc """
-  Removes the piece from the square (if there is one)
+  removes the piece from the square (if there is one)
   """
   def kill(square) do
     Map.put(square, :rank, :empty)
   end
 
   @doc """
-  Makes the piece a king
+  makes the piece a king
   """
   def promote(square) do
     Map.put(square, :rank, :king)
   end
 
   def is_empty(square) do
-    if(square.rank == :empty) do
-      true
-    else
-      false
-    end
+    square.rank == :empty
   end
 
   @doc """
-  Grabs the square from the coordinates passed in
+  grabs the square from the coordinates passed in
   """
   def fetch(board, {x, y}) do
     #grabs the square in the yth row and xth column(uses 7 - y since the board has the 7th row on top)
@@ -41,14 +37,14 @@ defmodule Square do
   end
 
   @doc """
-  Renders the square based on if there is a piece and what rank/affiliation it has
+  renders the square based on if there is a piece and what rank/affiliation it has
   """
   def render(square) do
     IO.write(ansi_color(square) <> rank_character(square.rank))
   end
   
   @doc """
-  Returns the ansi color for a square based on its rank/affiliation
+  returns the ansi color for a square based on its rank/affiliation
   """
   def ansi_color(square) do
     if(square.rank == :empty) do
@@ -62,7 +58,7 @@ defmodule Square do
   end
   
   @doc """
-  Returns the correct character for a square based on its rank
+  returns the correct character for a square based on its rank
   """
   def rank_character(rank) do
     case rank do

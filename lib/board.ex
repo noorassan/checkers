@@ -22,10 +22,33 @@ defmodule Board do
   end
 
   @doc """
+  fetches the 'Square' at '{x, y}' from 'board'
+  """
+  def fetch(board, {x, y}) do
+    #grabs the square in the yth row and xth column(uses 7 - y since the board has the 7th row on top)
+    {:ok, row} = Enum.fetch(board, 7 - y)
+    {:ok, square} = Enum.fetch(row, x)
+    square
+  end
+  
+  @doc """
+  returns 'board', but the 'Square' at '{x, y}' has the :empty rank
+  """
+  def kill_square(board, {x, y}) do
+    updated_square = fetch(board, {x, y})
+      |> Square.kill()
+
+    {:ok, row} = Enum.fetch(board, 7 - y)
+    updated_row = List.replace_at(row, x, updated_square)
+
+    List.replace_at(board, 7 - y, updated_row)
+  end
+
+
+  @doc """
   renders the checker board row by row
   """
   def render(board) do
-    IO.write(IO.ANSI.clear())
     for row <- board do
       render_row(row)
       IO.write("\n")
