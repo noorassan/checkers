@@ -5,7 +5,7 @@ defmodule Board do
   """
 
   @doc """
-  creates a checkers board. tuples have faster access times than lists
+  creates a checkers board
   """
   def create do
     _outer_row([], 0..1, %Square{affiliation: :enemy})

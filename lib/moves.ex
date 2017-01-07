@@ -12,7 +12,7 @@ defmodule Moves do
     |> possible_moves(coords)
     |> filter_negatives()
     |> filter_out_of_bounds()
-    |> adjust_for_kills(board, coords)
+    |> check_for_pieces()
   end
 
   @doc """
@@ -49,16 +49,10 @@ defmodule Moves do
     end
   end
 
-  def adjust_for_kills(possible_moves, board, {x, y}) do
-    Enum.map(possible_moves, fn({x2, y2}) ->
-      unless(Square.is_empty(Square.fetch(board, {x, y}))) do
-        board = Board.kill_square(board, {x2, y2})
-        #moves the piece one more in whatever direction the possible_move was from the original square
-        post_hop_coords = {x2 + (x2 - x), y2 + (y2 - y)}
-        find(board, post_hop_coords)
-      else
-        {x2, y2}
-      end
-    end)
+  def check_for_pieces(possible_moves, current_square_coords, board) do
+    Enum.map_reduce(possible_moves, board, fn(possible_move, board) ->
+      possible_move_square = Square.fetch(possible_move)
+      cond do
+        square.rank == :empty
   end
 end
