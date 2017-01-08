@@ -1,6 +1,6 @@
 # Checkers
 
-**TODO: Add description**
+An Elixir Checkers game with an AI.
 
 ## Installation
 
