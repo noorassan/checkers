@@ -14,8 +14,4 @@ defmodule Checkers do
     Board.create 
     |> Checkers.round()
   end
-
-  def round(board) do
-    
-  end
 end

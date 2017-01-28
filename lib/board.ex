@@ -22,7 +22,7 @@ defmodule Board do
   end
 
   @doc """
-  fetches the 'Square' at '{x, y}' from 'board'
+  fetches the Square at {x, y} from board
   """
   def fetch(board, {x, y}) do
     #grabs the square in the yth row and xth column(uses 7 - y since the board has the 7th row on top)
@@ -32,7 +32,7 @@ defmodule Board do
   end
   
   @doc """
-  returns 'board', but the 'Square' at '{x, y}' has the :empty rank
+  returns board, but the Square at {x, y} has the :empty rank
   """
   def kill_square(board, {x, y}) do
     updated_square = fetch(board, {x, y})
