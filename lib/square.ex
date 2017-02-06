@@ -5,7 +5,7 @@ defmodule Square do
   """
 
   defstruct affiliation: :friendly, rank: :pawn
-  #affiliation: :friendly, :enemy
+  #affiliation: :friendly, :enemy, :empty
   #rank: :pawn, :king, :empty
 
   @doc """
@@ -13,6 +13,7 @@ defmodule Square do
   """
   def kill(square) do
     Map.put(square, :rank, :empty)
+    |> Map.put(:affiliation, :empty)
   end
 
   @doc """
@@ -20,20 +21,6 @@ defmodule Square do
   """
   def promote(square) do
     Map.put(square, :rank, :king)
-  end
-
-  def is_empty(square) do
-    square.rank == :empty
-  end
-
-  @doc """
-  grabs the square from the coordinates passed in
-  """
-  def fetch(board, {x, y}) do
-    #grabs the square in the yth row and xth column(uses 7 - y since the board has the 7th row on top)
-    {:ok, row} = Enum.fetch(board, 7 - y)
-    {:ok, square} = Enum.fetch(row, x)
-    square
   end
 
   @doc """
