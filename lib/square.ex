@@ -13,7 +13,7 @@ defmodule Square do
   """
   def kill(square) do
     Map.put(square, :rank, :empty)
-    |> Map.put(:affiliation, :empty)
+    |>Map.put(:affiliation, :empty)
   end
 
   @doc """

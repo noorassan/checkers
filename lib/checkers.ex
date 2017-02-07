@@ -12,6 +12,6 @@ defmodule Checkers do
     IO.puts("Time to play some checkers!")
 
     Board.create 
-    |> Checkers.round()
+    |>Checkers.round()
   end
 end

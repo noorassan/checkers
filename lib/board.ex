@@ -12,8 +12,8 @@ defmodule Board do
   """
   def create do
     _outer_row([], 0..1, %Square{affiliation: :enemy})
-    |> _outer_row(2..(@board_rows - 3), %Square{rank: :empty, affiliation: :empty})
-    |> _outer_row((@board_rows - 2)..(@board_rows - 1), %Square{})
+    |>_outer_row(2..(@board_rows - 3), %Square{rank: :empty, affiliation: :empty})
+    |>_outer_row((@board_rows - 2)..(@board_rows - 1), %Square{})
   end
 
   defp _outer_row(acc, range, square) do
@@ -38,7 +38,7 @@ defmodule Board do
   """
   def kill_square(board, {x, y}) do
     updated_square = fetch_square(board, {x, y})
-      |> Square.kill()
+      |>Square.kill()
 
     {:ok, row} = Enum.fetch(board, 7 - y)
     updated_row = List.replace_at(row, x, updated_square)
