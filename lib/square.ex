@@ -5,7 +5,7 @@ defmodule Square do
   """
 
   defstruct affiliation: :friendly, rank: :pawn
-  #affiliation: :friendly, :enemy, :empty
+  #affiliation: :friendly, :enemy
   #rank: :pawn, :king, :empty
 
   @doc """
@@ -13,7 +13,6 @@ defmodule Square do
   """
   def kill(square) do
     Map.put(square, :rank, :empty)
-    |>Map.put(:affiliation, :empty)
   end
 
   @doc """

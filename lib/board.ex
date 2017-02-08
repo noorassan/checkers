@@ -12,7 +12,7 @@ defmodule Board do
   """
   def create do
     _outer_row([], 0..1, %Square{affiliation: :enemy})
-    |>_outer_row(2..(@board_rows - 3), %Square{rank: :empty, affiliation: :empty})
+    |>_outer_row(2..(@board_rows - 3), %Square{rank: :empty})
     |>_outer_row((@board_rows - 2)..(@board_rows - 1), %Square{})
   end
 

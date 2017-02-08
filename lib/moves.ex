@@ -15,9 +15,9 @@ defmodule Moves do
   """
   def find(board, {x, y}) do
     starting_square = Board.fetch_square(board, {x, y})
-    adjacents = adjacents({x, y}, starting_square)
+    adjacents = adjacents_by_rank({x, y}, starting_square)
 
-    Moves.filter_adjacents(adjacents, {x, y}, starting_square, board)
+    Moves.filter_hops(adjacents, {x, y}, starting_square, board)
     |>find_with_hops({x, y}, starting_square, board)
     |>List.flatten()
   end
@@ -28,22 +28,22 @@ defmodule Moves do
   starting_square -> the original square being moved
   """
   def find_with_hops(possible_moves, {x, y}, starting_square, board) do
-    Enum.map(possible_moves, fn({h, k}) ->
+    Enum.map(possible_moves, fn({{h, k}, killed}) ->
       move_square = Board.fetch_square(board, {h, k})
 
-      if(move_square.affiliation == :empty) do
+      if(move_square.rank == :empty) do
       # if there isn't a hop to be made
-        {h, k}
+        {{h, k}, killed}
       else
-        post_hop_coords = calculate_post_hop_coords({h, k}, {x, y}, board)
+        {post_hop_coords, post_hop_killed} = calculate_post_hop_move({h, k}, {x, y}, board, killed)
 
-        post_hop_moves = adjacents(post_hop_coords, starting_square)
-          |>filter_hops_only(post_hop_coords, board)
+        post_hop_moves = adjacents(post_hop_coords, post_hop_killed)
+          |>filter_out_non_hops(post_hop_coords, board)
           |>find_with_hops(post_hop_coords, starting_square, board)
 
         if(post_hop_moves == []) do
         #if there are no further hops, stop
-          [post_hop_coords]
+          [{post_hop_coords, post_hop_killed}]
         else
           [post_hop_moves]
         end
@@ -52,85 +52,95 @@ defmodule Moves do
   end
 
   @doc """
-  filters the moves found for the square at coords not accounting for hops
+  filters the moves found for the square at coords not calculating post_hop_coords for hops
   """
-  def filter_adjacents(moves, coords, square, board) do
-    Enum.filter(moves, fn(move) ->
-      moves_square = Board.fetch_square(board, move)
-      is_in_bounds?(move) and 
-      is_different_affiliation?(moves_square, square) and 
-      is_valid_hop?(move, coords, board)
+  def filter_hops(moves, coords, square, board) do
+    Enum.filter(moves, fn({move_coords, killed}) ->
+      moves_square = Board.fetch_square(board, move_coords)
+
+      is_in_bounds(move_coords) and 
+      (is_different_affiliation(moves_square, square) or is_empty(moves_square)) and 
+      is_valid_hop({move_coords, killed}, coords, board)
     end)  
   end
 
   @doc """
   filters the moves found for the square at coords to only include hops
   """
-  def filter_hops_only(moves, coords, board) do
+  def filter_out_non_hops(moves, coords, board) do
     Enum.filter_map(moves, 
-      fn(move) ->
-        moves_square = Board.fetch_square(board, move)
-        is_populated?(moves_square)
+      fn({move_coords, _killed}) ->
+        moves_square = Board.fetch_square(board, move_coords)
+        is_populated(moves_square)
       end,
 
-      fn(move) ->
-        calculate_post_hop_coords(move, coords, board)
+      fn({move_coords, killed}) ->
+        calculate_post_hop_move(move_coords, coords, board, killed)
       end)
+    |>Enum.filter(fn(move) -> !is_nil(move) end)
   end
 
   @doc """
-  returns the adjacent moves for the square based on coords
+  returns the adjacent moves for the coords based on their square's rank
   {x, y} -> starting coords
   """
-  def adjacents({x, y}, square) do
+  def adjacents_by_rank({x, y}, square, killed \\ []) do
     case square.rank do
       :empty ->
         []
       :king ->
-        [{x - 1, y - 1}, {x - 1, y + 1}, {x + 1, y - 1}, {x + 1, y + 1}]
+        [{{x - 1, y - 1}, killed}, {{x - 1, y + 1}, killed}, {{x + 1, y - 1}, killed}, {{x + 1, y + 1}, killed}]
       :pawn ->
         case square.affiliation do
           :friendly ->
-            [{x - 1, y + 1}, {x + 1, y + 1}]
+            [{{x - 1, y + 1}, killed}, {{x + 1, y + 1}, killed}]
           :enemy ->
-            [{x - 1, y - 1}, {x + 1, y - 1}]
+            [{{x - 1, y - 1}, killed}, {{x + 1, y - 1}, killed}]
         end
     end
   end
 
   @doc """
+  returns the adjacent moves for the coords, ignoring the rank of coords' square
+  {x, y} -> starting coords
+  """
+  def adjacents({x, y}, killed \\ []) do
+    [{{x - 1, y - 1}, killed}, {{x - 1, y + 1}, killed}, {{x + 1, y - 1}, killed}, {{x + 1, y + 1}, killed}]
+  end
+
+  @doc """
   returns boolean for whether move is in bounds or not
   """
-  def is_in_bounds?({x, y}) do
+  def is_in_bounds({x, y}) do
     x < @board_rows and x >= 0 and y >= 0 and y < @board_cols
   end
 
   @doc """
   returns boolean for whether the square move points to is of different affiliation or not
   """
-  def is_different_affiliation?(moves_square, starting_square) do
+  def is_different_affiliation(moves_square, starting_square) do
     moves_square.affiliation != starting_square.affiliation
   end
 
   @doc """
   returns boolean for whether the square move points to is populated or not
   """
-  def is_populated?(moves_square) do
-    moves_square.affiliation != :empty
+  def is_populated(moves_square) do
+    moves_square.rank != :empty
   end
 
   @doc """
   returns boolean for whether the square move points to is empty or not
   """
-  def is_empty?(moves_square) do
-    moves_square.affiliation == :empty
+  def is_empty(moves_square) do
+    moves_square.rank == :empty
   end
 
   @doc """
   returns boolean for whether the hop of move would point to an empty square
   """
-  def is_valid_hop?(move, coords, board) do
-    post_hop_coords = calculate_post_hop_coords(move, coords, board)
+  def is_valid_hop({move_coords, killed}, coords, board) do
+    post_hop_coords = calculate_post_hop_move(move_coords, coords, board, killed)
     
     unless(post_hop_coords == nil) do
       true
@@ -142,12 +152,12 @@ defmodule Moves do
   @doc """
   calculates the coords the square at {x, y} would land in if it hopped over the square at {h, k}
   """
-  def calculate_post_hop_coords({h, k}, {x, y}, board) do
+  def calculate_post_hop_move({h, k}, {x, y}, board, killed) do
     post_hop_coords = {(h - x) + h, (k - y) + k}
     post_hop_square = Board.fetch_square(board, post_hop_coords)
     
-    if(is_empty?(post_hop_square) and is_in_bounds?(post_hop_coords)) do
-      post_hop_coords
+    if(is_empty(post_hop_square) and is_in_bounds(post_hop_coords)) do
+      {post_hop_coords, [{h, k} | killed]}
     else
       nil
     end
