@@ -23,6 +23,27 @@ defmodule Square do
   end
 
   @doc """
+  returns boolean for whether the squares are of different affiliation or not
+  """
+  def is_different_affiliation(square_one, square_two) do
+    square_one.affiliation != square_two.affiliation
+  end
+
+  @doc """
+  returns boolean for whether the square is populated or not
+  """
+  def is_populated(square) do
+    square.rank != :empty
+  end
+
+  @doc """
+  returns boolean for whether the square is empty or not
+  """
+  def is_empty(square) do
+    square.rank == :empty
+  end
+
+  @doc """
   renders the square based on if there is a piece and what rank/affiliation it has
   """
   def render(square) do
