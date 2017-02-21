@@ -17,7 +17,7 @@ defmodule Moves do
     starting_square = Board.fetch_square(board, {x, y})
     adjacents = adjacents_by_rank({x, y}, starting_square)
 
-    Moves.filter_hops(adjacents, {x, y}, starting_square, board)
+    Moves.filter_invalid_moves(adjacents, starting_square, board)
     |>find_with_hops({x, y}, starting_square, board)
     |>List.flatten()
   end
@@ -31,13 +31,14 @@ defmodule Moves do
     Enum.map(possible_moves, fn({{h, k}, killed}) ->
       move_square = Board.fetch_square(board, {h, k})
 
-      if(move_square.rank == :empty) do
+      if(Square.is_empty(move_square)) do
+        IEx.pry()
       # if there isn't a hop to be made
         {{h, k}, killed}
       else
         {post_hop_coords, post_hop_killed} = calculate_post_hop_move({h, k}, {x, y}, board, killed)
 
-        post_hop_moves = adjacents(post_hop_coords, post_hop_killed)
+        post_hop_moves = adjacents_by_rank(post_hop_coords, starting_square, post_hop_killed)
           |>filter_out_non_hops(post_hop_coords, board)
           |>find_with_hops(post_hop_coords, starting_square, board)
 
@@ -52,16 +53,15 @@ defmodule Moves do
   end
 
   @doc """
-  filters the moves found for the square at coords not calculating post_hop_coords for hops
+  filters the moves found for the square at coords
   """
-  def filter_hops(moves, coords, square, board) do
-    Enum.filter(moves, fn({move_coords, killed}) ->
+  def filter_invalid_moves(moves, square, board) do
+    Enum.filter(moves, fn({move_coords, _killed}) ->
       moves_square = Board.fetch_square(board, move_coords)
 
-      is_in_bounds(move_coords) and 
-      Square.is_different_affiliation(moves_square, square) and 
-      Square.is_populated(moves_square) and
-      is_valid_hop({move_coords, killed}, coords, board)
+      is_in_bounds(move_coords) 
+      and Square.is_different_affiliation(moves_square, square) 
+      and Square.is_populated(moves_square) 
     end)  
   end
 
@@ -70,9 +70,10 @@ defmodule Moves do
   """
   def filter_out_non_hops(moves, coords, board) do
     Enum.filter_map(moves, 
-      fn({move_coords, _killed}) ->
+      fn({move_coords, killed}) ->
         moves_square = Board.fetch_square(board, move_coords)
         Square.is_populated(moves_square)
+        and is_valid_hop({move_coords, killed}, coords, board)
       end,
 
       fn({move_coords, killed}) ->
@@ -99,14 +100,6 @@ defmodule Moves do
             [{{x - 1, y - 1}, killed}, {{x + 1, y - 1}, killed}]
         end
     end
-  end
-
-  @doc """
-  returns the adjacent moves for the coords, ignoring the rank of coords' square
-  {x, y} -> starting coords
-  """
-  def adjacents({x, y}, killed \\ []) do
-    [{{x - 1, y - 1}, killed}, {{x - 1, y + 1}, killed}, {{x + 1, y - 1}, killed}, {{x + 1, y + 1}, killed}]
   end
 
   @doc """
