@@ -29,6 +29,8 @@ defmodule Moves do
   starting_square -> the original square being moved
   """
   def find_with_hops(possible_moves, {x, y}, starting_square, board) do
+    IO.inspect(possible_moves)
+    IO.inspect({x, y})
     Enum.map(possible_moves, fn({{h, k}, killed}) ->
       move_square = Board.fetch_square(board, {h, k})
 
@@ -42,7 +44,12 @@ defmodule Moves do
             |>filter_out_non_hops(post_hop_coords, board)
 
             unless(post_hop_moves == []) do
-              find_with_hops(post_hop_moves, post_hop_coords, starting_square, board)
+              for {move, killed} <- post_hop_moves do
+                post_hop_moves = adjacents_by_rank(move, starting_square, killed)
+                  |>filter_out_non_hops(move, board)
+
+                find_with_hops(post_hop_moves, {move, killed}, starting_square, board)
+              end
             else
               {post_hop_coords, post_hop_killed}
             end
