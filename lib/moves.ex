@@ -38,15 +38,12 @@ defmodule Moves do
       else
         case(calculate_post_hop_move({h, k}, {x, y}, killed, board)) do
           {post_hop_coords, post_hop_killed} ->
-            post_hop_moves = adjacents_by_rank(post_hop_coords, starting_square, post_hop_killed)
-            |>filter_out_non_hops(post_hop_coords, board)
+            post_hop_moves = filter_adjacents_hops_only(post_hop_coords, starting_square, post_hop_killed, board)
 
             unless(post_hop_moves == []) do
-              for {move, killed} <- post_hop_moves do
-                post_hop_moves = adjacents_by_rank(move, starting_square, killed)
-                  |>filter_out_non_hops(move, board)
-
-                find_with_hops(post_hop_moves, {move, killed}, starting_square, board)
+              for {coords, killed} <- post_hop_moves do
+                filter_adjacents_hops_only(coords, starting_square, killed, board)
+                |>find_with_hops({coords, killed}, starting_square, board)
               end
             else
               {post_hop_coords, post_hop_killed}
@@ -56,6 +53,15 @@ defmodule Moves do
         end
       end
     end)
+  end
+
+
+  @doc """
+  finds adjacents and filters out the non hops
+  """
+  def filter_adjacents_hops_only(coords, square, killed, board) do
+    adjacents_by_rank(coords, square, killed)
+    |>filter_out_non_hops(coords, board)
   end
 
   @doc """
