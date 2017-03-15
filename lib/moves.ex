@@ -29,8 +29,6 @@ defmodule Moves do
   starting_square -> the original square being moved
   """
   def find_with_hops(possible_moves, {x, y}, starting_square, board) do
-    IO.inspect(possible_moves)
-    IO.inspect({x, y})
     Enum.map(possible_moves, fn({{h, k}, killed}) ->
       move_square = Board.fetch_square(board, {h, k})
 
