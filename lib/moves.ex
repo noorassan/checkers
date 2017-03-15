@@ -17,8 +17,9 @@ defmodule Moves do
     starting_square = Board.fetch_square(board, {x, y})
     adjacents = adjacents_by_rank({x, y}, starting_square)
 
-    Moves.filter_invalid_moves(adjacents, starting_square, board)
+    filter_invalid_moves(adjacents, starting_square, board)
     |>find_with_hops({x, y}, starting_square, board)
+    |>Enum.filter(fn(move) -> !is_nil(move) end)
     |>List.flatten()
   end
 
@@ -35,11 +36,19 @@ defmodule Moves do
       # if there isn't a hop to be made
         {{h, k}, killed}
       else
-        {post_hop_coords, post_hop_killed} = calculate_post_hop_move({h, k}, {x, y}, killed, board)
+        case(calculate_post_hop_move({h, k}, {x, y}, killed, board)) do
+          {post_hop_coords, post_hop_killed} ->
+            post_hop_moves = adjacents_by_rank(post_hop_coords, starting_square, post_hop_killed)
+            |>filter_out_non_hops(post_hop_coords, board)
 
-        adjacents_by_rank(post_hop_coords, starting_square, post_hop_killed)
-        |>filter_out_non_hops(post_hop_coords, board)
-        |>find_with_hops(post_hop_coords, starting_square, board)
+            unless(post_hop_moves == []) do
+              find_with_hops(post_hop_moves, post_hop_coords, starting_square, board)
+            else
+              {post_hop_coords, post_hop_killed}
+            end
+          _ ->
+            nil
+        end
       end
     end)
   end
@@ -78,7 +87,6 @@ defmodule Moves do
       fn({move_coords, killed}) ->
         calculate_post_hop_move(move_coords, coords, killed, board)
       end)
-    |>Enum.filter(fn(move) -> !is_nil(move) end)
   end
 
   @doc """
@@ -127,7 +135,7 @@ defmodule Moves do
   def calculate_post_hop_move({h, k}, {x, y}, killed, board) do
     post_hop_coords = {(h - x) + h, (k - y) + k}
     post_hop_square = Board.fetch_square(board, post_hop_coords)
-    
+
     if(Square.is_empty(post_hop_square) and is_in_bounds(post_hop_coords)) do
       {post_hop_coords, [{h, k} | killed]}
     end
