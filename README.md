@@ -1,6 +1,6 @@
 # Checkers
 
-An Elixir Checkers game with an AI.
+An CMD checkers game programmed in Elixir.
 
 ## Installation
 
